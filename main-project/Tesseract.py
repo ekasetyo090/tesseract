@@ -20,10 +20,10 @@ from data_construct import data_constuct
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import requests as req
 sns.set_theme(style="ticks", palette="deep")
-image_path = 'https://github.com/ekasetyo090/tesseract/blob/fc58e4f8309e2eca7da51eddaa8dc1a2fea08842/main-project/resources/tesseract_6872044.png'
-logo_image = Image.open(image_path)
+image_path = 'https://github.com/ekasetyo090/tesseract/raw/fc58e4f8309e2eca7da51eddaa8dc1a2fea08842/main-project/resources/tesseract_6872044.png'
+#logo_image = Image.open(req.get(image_path))
 
 
 scraper_obj = YtScraper()
@@ -42,7 +42,7 @@ st.set_page_config(
 with st.sidebar:
     col1, col2 = st.columns([1, 3])
     with col1:
-        st.image(logo_image,width=50)
+        st.image(image_path,width=50)
     with col2:
         st.title("Project Tesseract")
     st.header("Parameter")
