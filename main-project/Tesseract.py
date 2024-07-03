@@ -278,8 +278,7 @@ with st.container(border=None):
                title='Performance By For Kids')
         ax.grid(True)
         st.pyplot(fig,use_container_width=True)
-st.write(df_video.dtypes)
-st.dataframe(df_video)
+
         
    
        
