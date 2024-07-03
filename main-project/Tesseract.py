@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_theme(style="ticks", palette="deep")
-logo_image = Image.open("resources/tesseract_6872044.png")
+logo_image = Image.open("./resources/tesseract_6872044.png")
 
 
 scraper_obj = YtScraper()
