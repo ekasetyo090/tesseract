@@ -70,7 +70,7 @@ with st.sidebar:
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
     option_day = st.selectbox("Content By Day",
                                     df_filter['day'].unique(),index=0)
-    df_sort_day = df_filter.loc[df_filter['df_filter']==option_day]
+    df_sort_day = df_filter.loc[df_filter['day']==option_day]
     option_metric = st.selectbox("Metric Type For Language",
                                     ("Likes", 
                                      "Views",
@@ -79,7 +79,7 @@ with st.sidebar:
     metrics= {"Likes":'like_count',
                           "Views":'view_count',
                           "Favorite":'favorite_count',
-                          "Comment":'comment_count'}
+                          "Comment":'comment_count'}ss
    
 
 col1, col2 = st.columns([1, 7])
