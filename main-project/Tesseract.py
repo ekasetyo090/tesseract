@@ -11,16 +11,12 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../library')))
 #sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './resources')))
 
-import datetime
-import pandas as pd
-import streamlit as st
-from PIL import Image
 from YT_Scrapy import YtScraper
 from data_construct import data_constuct
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import requests as req
+
 sns.set_theme(style="ticks", palette="deep")
 image_path = 'https://github.com/ekasetyo090/tesseract/raw/fc58e4f8309e2eca7da51eddaa8dc1a2fea08842/main-project/resources/tesseract_6872044.png'
 #logo_image = Image.open(req.get(image_path))
@@ -125,159 +121,178 @@ with st.container(border=None):
 st.header('Language',divider='rainbow')
 
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_language = st.selectbox("Metric Type For Language",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots(figsize=(10,3))
-        sns.boxplot(data=df_video,
-                    x=metrics.get(option_language),
-                    y='defaultAudioLanguage',showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_language, 
-               ylabel='Language', 
-               title='Performance By Language')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
+    if not df_video['defaultAudioLanguage'].empty:
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_language = st.selectbox("Metric Type For Language",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots(figsize=(10,3))
+            sns.boxplot(data=df_video,
+                        x=metrics.get(option_language),
+                        y='defaultAudioLanguage',showmeans=True,
+                        ax=ax)
+            ax.set(xlabel=option_language, 
+                   ylabel='Language', 
+                   title='Performance By Language')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Language Data Empty")
         
 st.header('Days',divider='rainbow')
 
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_day = st.selectbox("Metric Type For Days",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_video,
-                    x=metrics.get(option_day),
-                    y='day',showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_day, 
-               ylabel='Day', 
-               title='Performance By Days')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-        
+    if not df_video['day'].empty and 'day' in df_video.columns: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_day = st.selectbox("Metric Type For Days",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots()
+            sns.boxplot(data=df_video,
+                        x=metrics.get(option_day),
+                        y='day',showmeans=True,
+                        ax=ax)
+            ax.set(xlabel=option_day, 
+                   ylabel='Day', 
+                   title='Performance By Days')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Day Data Empty")
 st.header('Hour',divider='rainbow')
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        
-        option_hour = st.selectbox("Metric Type For Hour",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.lineplot(
-            data=df_video, x="hour", y=metrics.get(option_hour),ax=ax)
+    if not df_video['hour'].empty: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
             
-        ax.set(xlabel='Hour', 
-               ylabel=option_hour, 
-               title='Performance By Hour (UTC)')
-        ax.grid(True)
-        
-        st.pyplot(fig,use_container_width=True)
-        
+            option_hour = st.selectbox("Metric Type For Hour",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots()
+            sns.lineplot(
+                data=df_video, x="hour", y=metrics.get(option_hour),ax=ax)
+                
+            ax.set(xlabel='Hour', 
+                   ylabel=option_hour, 
+                   title='Performance By Hour (UTC)')
+            ax.grid(True)
+            
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Hour Data Empty")
 st.header('Topic Category',divider='rainbow')
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_category_type = st.selectbox("Category Type",
-                                            ("Primary Category", 
-                                             "Sub-Category",
-                                             ),index=1)
-        option_category = st.selectbox("Metric Type For Category",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-        topic_dict = {"Primary Category":'parent_topic_primary',
-                      "Sub-Category":'parent_topic'}
-    with col2:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_video,
-                    x=metrics.get(option_day),
-                    y=topic_dict.get(option_category_type),
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_category, 
-               ylabel='Category', 
-               title='Performance By Category')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-
+    if not df_video['parent_topic_primary'].empty and not df_video['parent_topic'].empty: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_category_type = st.selectbox("Category Type",
+                                                ("Primary Category", 
+                                                 "Sub-Category",
+                                                 ),index=1)
+            option_category = st.selectbox("Metric Type For Category",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+            topic_dict = {"Primary Category":'parent_topic_primary',
+                          "Sub-Category":'parent_topic'}
+        with col2:
+            fig, ax = plt.subplots()
+            sns.boxplot(data=df_video,
+                        x=metrics.get(option_day),
+                        y=topic_dict.get(option_category_type),
+                        showmeans=True,
+                        ax=ax)
+            ax.set(xlabel=option_category, 
+                   ylabel='Category', 
+                   title='Performance By Category')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Category Data Empty")
+        
 st.header('Duration',divider='rainbow')
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_duration = st.selectbox("Metric Type For Duration",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.regplot(data=df_video, x="duration(s)", y=metrics.get(option_duration),
-                    ax=ax,logx=True)
-        ax.set(xlabel='Duration In Seconds', 
-               ylabel=option_duration, 
-               title=f'Relation Between {option_duration} And Duration')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-
+    if not df_video['duration(s)'].empty: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_duration = st.selectbox("Metric Type For Duration",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots()
+            sns.regplot(data=df_video, x="duration(s)", y=metrics.get(option_duration),
+                        ax=ax,logx=True)
+            ax.set(xlabel='Duration In Seconds', 
+                   ylabel=option_duration, 
+                   title=f'Relation Between {option_duration} And Duration')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Duration Data Empty")
+        
 st.header('Licensed Content',divider='rainbow')
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_licensed = st.selectbox("Metric Type For Licensed Content",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_video,
-                    x=metrics.get(option_licensed),
-                    y='licensed_content',
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_licensed, 
-               ylabel='Licensed Content', 
-               title='Performance By Licensed Content')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
+    if not df_video['licensed_content'].empty: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_licensed = st.selectbox("Metric Type For Licensed Content",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots()
+            sns.boxplot(data=df_video,
+                        x=metrics.get(option_licensed),
+                        y='licensed_content',
+                        showmeans=True,
+                        ax=ax)
+            ax.set(xlabel=option_licensed, 
+                   ylabel='Licensed Content', 
+                   title='Performance By Licensed Content')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("Licensed Data Empty")
         
 st.header('For Kids',divider='rainbow')
 with st.container(border=None):
-    col1, col2, = st.columns([1.5,5])
-    with col1:
-        option_for_kids= st.selectbox("Metric Type For Kids Content",
-                                        ("Likes", 
-                                         "Views",
-                                         "Favorite",
-                                         "Comment"),index=0)
-    with col2:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_video,
-                    x=metrics.get(option_for_kids),
-                    y='for_kids',
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_for_kids, 
-               ylabel='For Kids', 
-               title='Performance By For Kids')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
+    if not df_video['for_kids'].empty: 
+        col1, col2, = st.columns([1.5,5])
+        with col1:
+            option_for_kids= st.selectbox("Metric Type For Kids Content",
+                                            ("Likes", 
+                                             "Views",
+                                             "Favorite",
+                                             "Comment"),index=0)
+        with col2:
+            fig, ax = plt.subplots()
+            sns.boxplot(data=df_video,
+                        x=metrics.get(option_for_kids),
+                        y='for_kids',
+                        showmeans=True,
+                        ax=ax)
+            ax.set(xlabel=option_for_kids, 
+                   ylabel='For Kids', 
+                   title='Performance By For Kids')
+            ax.grid(True)
+            st.pyplot(fig,use_container_width=True)
+    else:
+        st.write("For Kids Data Empty")
 
         
    
