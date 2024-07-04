@@ -69,7 +69,7 @@ with st.sidebar:
         df_filter = df_video.copy()
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
     option_day = st.selectbox("Content By Day",
-                                    df_filter['day'].unique().to_list(),index=0)
+                                    df_filter['day'].unique(),index=0)
 
    
 
