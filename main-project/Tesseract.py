@@ -79,7 +79,7 @@ with st.sidebar:
     metrics= {"Likes":'like_count',
                           "Views":'view_count',
                           "Favorite":'favorite_count',
-                          "Comment":'comment_count'}ss
+                          "Comment":'comment_count'}
    
 
 col1, col2 = st.columns([1, 7])
