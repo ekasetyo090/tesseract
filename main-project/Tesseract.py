@@ -54,15 +54,12 @@ with st.sidebar:
     df_video['defaultAudioLanguage'] = df_video['defaultAudioLanguage'].astype(str)
     channel_name = r"{}".format(channel_basic_data['channel_name'].replace(':',' : '))
     
+    day_list = []
+    option_dur = st.selectbox("Content By Duration",
+                                    ("All", 
+                                     "Short",
+                                     "Long"),index=0)
     
-    option_dur = st.selectbox("Content By Duratio",
-                                    ("All", 
-                                     "Short",
-                                     "Long"),index=0)
-    option_day = st.selectbox("Content By Day",
-                                    ("All", 
-                                     "Short",
-                                     "Long"),index=0)
     #df_per_dur = df_video.copy()
     if option_dur == 'Short':
         df_filter = df_video.loc[df_video["duration(s)"]<=60].copy()
@@ -71,6 +68,8 @@ with st.sidebar:
     else:
         df_filter = df_video.copy()
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
+    option_day = st.selectbox("Content By Day",
+                                    df_filter['day'].unique().to_list(),index=0)
 
    
 
@@ -169,7 +168,7 @@ with st.container(border=None):
 st.header('Days',divider='rainbow')
 
 with st.container(border=None):
-    if not df_video['day'].empty and 'day' in df_video.columns: 
+    if not df_video['day'].empty: 
         col1, col2, = st.columns([1.5,5])
         with col1:
             option_day = st.selectbox("Metric Type For Days",
