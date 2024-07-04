@@ -68,17 +68,22 @@ with st.sidebar:
     else:
         df_filter = df_video.copy()
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
-    list_day_filter = (df_filter['day'].to_list()).append('All')
-    list_day_filter = set(list_day_filter)
-    if list_day_filter:
-        option_day = st.selectbox("Content By Day",
-                                        list_day_filter,index=len(list_day_filter)-1)
+    list_day_filter = df_filter['day'].unique().tolist()
+    #list_day_filter = list_day_filter.tolist()
+    list_day_filter = list_day_filter + ['All']
     
-    if option_day == 'All':
-        df_sort_day = df_filter.copy()
+   
+    option_day = st.selectbox("Content By Day",
+                                    list_day_filter,index=len(list_day_filter)-1)
+    
+    if option_day:
+        if option_day == 'All':
+            df_sort_day = df_filter.copy()
+        else:
+            df_sort_day = df_filter.loc[df_filter['day']==option_day]
     else:
-        df_sort_day = df_filter.loc[df_filter['day']==option_day]
-    option_metric = st.selectbox("Metric Type For Language",
+        df_sort_day = df_filter.copy()
+    option_metric = st.selectbox("Metric Type",
                                     ("Likes", 
                                      "Views",
                                      "Favorite",
