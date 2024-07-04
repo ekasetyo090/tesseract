@@ -178,10 +178,21 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur = st.selectbox("Base On Duration",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            df_hour_dur = df_video.copy()
+            if option_dur == 'Short':
+                df_hour_dur = df_hour_dur.loc[df_hour_dur["duration(s)"]<=60].copy()
+            elif option_dur == 'Long':
+                df_hour_dur = df_hour_dur.loc[df_hour_dur["duration(s)"]>60].copy()
+            else:
+                df_hour_dur = df_video.copy()
         with col2:
             fig, ax = plt.subplots()
             sns.lineplot(
-                data=df_video, x="hour", y=metrics.get(option_hour),ax=ax)
+                data=df_hour_dur, x="hour", y=metrics.get(option_hour),ax=ax)
                 
             ax.set(xlabel='Hour', 
                    ylabel=option_hour, 
