@@ -103,10 +103,22 @@ with st.container(border=None):
                                                           "Views",
                                                           "Favorite",
                                                           "Comment"),index=0)
+        option_dur = st.selectbox("Duration Type For Performance",
+                                        ("All", 
+                                         "Short",
+                                         "Long"),index=0)
+        #df_per_dur = df_video.copy()
+        if option_dur == 'Short':
+            df_per_dur = df_video.loc[df_video["duration(s)"]<=60].copy()
+        elif option_dur == 'Long':
+            df_per_dur = df_video.loc[df_video["duration(s)"]>60].copy()
+        else:
+            df_per_dur = df_video.copy()
+            
     with col2:
-       
+        
         fig, ax = plt.subplots()
-        plot = sns.lineplot(data=df_video,x='start_time(UTC)',
+        plot = sns.lineplot(data=df_per_dur,x='start_time(UTC)',
                             y=metrics.get(option_lineplot_Performance_metric),
                             ax=ax)
         ax.set(xlabel='Date', 
@@ -129,9 +141,21 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur1 = st.selectbox("Duration Type For Language",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            #df_hour_dur = df_video.copy()
+            if option_dur1 == 'Short':
+                df_lang_dur = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur1 == 'Long':
+                df_lang_dur = df_video.loc[df_video["duration(s)"]>60].copy()
+            else:
+                df_lang_dur = df_video.copy()
+                
         with col2:
             fig, ax = plt.subplots(figsize=(10,3))
-            sns.boxplot(data=df_video,
+            sns.boxplot(data=df_lang_dur,
                         x=metrics.get(option_language),
                         y='defaultAudioLanguage',showmeans=True,
                         ax=ax)
@@ -178,15 +202,15 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
-            option_dur = st.selectbox("Base On Duration",
+            option_dur2 = st.selectbox("Duration Type For Hour",
                                             ("All", 
                                              "Short",
                                              "Long"),index=0)
-            df_hour_dur = df_video.copy()
-            if option_dur == 'Short':
-                df_hour_dur = df_hour_dur.loc[df_hour_dur["duration(s)"]<=60].copy()
-            elif option_dur == 'Long':
-                df_hour_dur = df_hour_dur.loc[df_hour_dur["duration(s)"]>60].copy()
+            #df_hour_dur = df_video.copy()
+            if option_dur2 == 'Short':
+                df_hour_dur = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur2 == 'Long':
+                df_hour_dur = df_video.loc[df_video["duration(s)"]>60].copy()
             else:
                 df_hour_dur = df_video.copy()
         with col2:
@@ -216,6 +240,18 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur3 = st.selectbox("Duration Type For Category",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            
+            if option_dur3 == 'Short':
+                df_cat_dur = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur3 == 'Long':
+                df_cat_dur = df_video.loc[df_video["duration(s)"]>60].copy()
+            else:
+                df_cat_dur = df_video.copy()
+                
             topic_dict = {"Primary Category":'parent_topic_primary',
                           "Sub-Category":'parent_topic'}
         with col2:
@@ -243,9 +279,20 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur4 = st.selectbox("Duration Type",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            
+            if option_dur4 == 'Short':
+                df_dur = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur4 == 'Long':
+                df_dur = df_video.loc[df_video["duration(s)"]>60].copy()
+            else:
+                df_dur = df_video.copy()
         with col2:
             fig, ax = plt.subplots()
-            sns.regplot(data=df_video, x="duration(s)", y=metrics.get(option_duration),
+            sns.regplot(data=df_dur, x="duration(s)", y=metrics.get(option_duration),
                         ax=ax,logx=True)
             ax.set(xlabel='Duration In Seconds', 
                    ylabel=option_duration, 
@@ -265,9 +312,20 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur5 = st.selectbox("Duration Type For Licensed Content",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            
+            if option_dur5 == 'Short':
+                df_lisc = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur5 == 'Long':
+                df_lisc = df_video.loc[df_video["duration(s)"]>60].copy()
+            else:
+                df_lisc = df_video.copy()
         with col2:
             fig, ax = plt.subplots()
-            sns.boxplot(data=df_video,
+            sns.boxplot(data=df_lisc,
                         x=metrics.get(option_licensed),
                         y='licensed_content',
                         showmeans=True,
@@ -290,9 +348,21 @@ with st.container(border=None):
                                              "Views",
                                              "Favorite",
                                              "Comment"),index=0)
+            option_dur6 = st.selectbox("Duration Type For Kids",
+                                            ("All", 
+                                             "Short",
+                                             "Long"),index=0)
+            
+            if option_dur6 == 'Short':
+                df_dur_kids = df_video.loc[df_video["duration(s)"]<=60].copy()
+            elif option_dur6 == 'Long':
+                df_dur_kids = df_video.loc[df_video["duration(s)"]>60].copy()
+            else:
+                df_dur_kids = df_video.copy()
+            
         with col2:
             fig, ax = plt.subplots()
-            sns.boxplot(data=df_video,
+            sns.boxplot(data=df_dur_kids,
                         x=metrics.get(option_for_kids),
                         y='for_kids',
                         showmeans=True,
