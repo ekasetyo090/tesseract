@@ -214,7 +214,7 @@ with st.container(border=None):
                 df_hour_dur = df_video.loc[df_video["duration(s)"]>60].copy()
             else:
                 df_hour_dur = df_video.copy()
-            df_hour_dur.sort_index(by='hour', ascending=True,inplace=True)
+            df_hour_dur.sort_values(by='hour', ascending=True,inplace=True)
         with col2:
             fig, ax = plt.subplots()
             sns.lineplot(
