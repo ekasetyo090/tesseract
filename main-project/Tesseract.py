@@ -52,7 +52,7 @@ with st.sidebar:
 channel_basic_data = scraper_obj.scrape_channel_basic_data(channel_id)
 list_video_id = scraper_obj.scrape_playlist_item(channel_basic_data['all_video_upload_playlist_id'])
 df_video = construct_obj.construct_df(scraper_obj.scrape_video_data(list_video_id))
-
+df_video['defaultAudioLanguage'] = df_video['defaultAudioLanguage'].astype(str)
 channel_name = r"{}".format(channel_basic_data['channel_name'].replace(':',' : '))
 col1, col2 = st.columns([1, 7])
 with col1:
