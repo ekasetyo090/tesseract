@@ -68,7 +68,7 @@ with st.sidebar:
     else:
         df_filter = df_video.copy()
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
-    list_day_filter = (set(df_filter['day'].tolist())).append('All')
+    list_day_filter = (list(set(df_filter['day'].tolist()))).append('All')
     option_day = st.selectbox("Content By Day",
                                     list_day_filter,index=len(list_day_filter)-1)
     if option_day == 'All':
