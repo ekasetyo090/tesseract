@@ -122,7 +122,7 @@ class data_constuct:
         df['parent_topic_primary'] = df['categoryId'].apply(lambda x: self.parent_topic_id(x) if x is not None else None)
         df['start_time(UTC)'].fillna(df['published_date'], inplace=True)
         df['day'] = df['start_time(UTC)'].dt.strftime('%A')
-        df['hour'] = df['start_time(UTC)'].dt.hour
+        df['hour'] = df['start_time(UTC)'].dt.strftime('%H')
         df['licensed_content'] = df['licensed_content'].astype(str)
         df['for_kids'] = df['for_kids'].astype(str)
         return df
