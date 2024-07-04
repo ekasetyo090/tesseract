@@ -74,7 +74,7 @@ with st.sidebar:
         option_day = st.selectbox("Content By Day",
                                         list_day_filter,index=len(list_day_filter)-1)
     
-    if option_day == 'All' or not option_day:
+    if option_day == 'All':
         df_sort_day = df_filter.copy()
     else:
         df_sort_day = df_filter.loc[df_filter['day']==option_day]
