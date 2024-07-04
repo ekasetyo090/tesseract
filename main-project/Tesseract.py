@@ -16,7 +16,7 @@ from data_construct import data_constuct
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
+#import numpy as np
 sns.set_theme(style="ticks", palette="deep")
 image_path = 'https://github.com/ekasetyo090/tesseract/raw/fc58e4f8309e2eca7da51eddaa8dc1a2fea08842/main-project/resources/tesseract_6872044.png'
 #logo_image = Image.open(req.get(image_path))
@@ -68,7 +68,7 @@ with st.sidebar:
     else:
         df_filter = df_video.copy()
     df_filter.sort_values(by='hour', ascending=True,inplace=True)
-    list_day_filter = (df_filter['day'].unique().tolist()).append('All')
+    list_day_filter = (set(df_filter['day'].tolist())).append('All')
     option_day = st.selectbox("Content By Day",
                                     list_day_filter,index=len(list_day_filter)-1)
     if option_day == 'All':
