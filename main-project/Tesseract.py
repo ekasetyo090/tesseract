@@ -191,6 +191,7 @@ with st.container(border=None):
             st.pyplot(fig,use_container_width=True)
     else:
         st.write("Day Data Empty")
+        
 st.header('Hour',divider='rainbow')
 with st.container(border=None):
     if not df_video['hour'].empty: 
@@ -213,7 +214,7 @@ with st.container(border=None):
                 df_hour_dur = df_video.loc[df_video["duration(s)"]>60].copy()
             else:
                 df_hour_dur = df_video.copy()
-            df_hour_dur.sort_index(level='hour', ascending=True,inplace=True)
+            df_hour_dur.sort_index(by='hour', ascending=True,inplace=True)
         with col2:
             fig, ax = plt.subplots()
             sns.lineplot(
