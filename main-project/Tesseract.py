@@ -13,13 +13,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../libr
 
 from YT_Scrapy import YtScraper
 from data_construct import data_constuct
+from datetime import timedelta
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-#import numpy as np
+import pandas as pd
 sns.set_theme(style="ticks", palette="deep")
 image_path = 'https://github.com/ekasetyo090/tesseract/raw/fc58e4f8309e2eca7da51eddaa8dc1a2fea08842/main-project/resources/tesseract_6872044.png'
 #logo_image = Image.open(req.get(image_path))
+
+@st.cache_data
+def get_start_of_week(date):
+  day_offset = date.weekday()
+  return date - timedelta(days=day_offset)
 
 
 scraper_obj = YtScraper()
@@ -42,56 +48,51 @@ with st.sidebar:
     with col2:
         st.title("Project Tesseract")
     st.header("Parameter")
+    st.subheader("Channel ID")
     channel_id_input = st.text_input(label='channel ID' ,placeholder ='input channel ID here')
     if not channel_id_input:
         channel_id = '@cecilialieberia'
     else:
         channel_id = channel_id_input
-    #---------------------------
-    channel_basic_data = scraper_obj.scrape_channel_basic_data(channel_id)
-    list_video_id = scraper_obj.scrape_playlist_item(channel_basic_data['all_video_upload_playlist_id'])
-    df_video = construct_obj.construct_df(scraper_obj.scrape_video_data(list_video_id))
-    df_video['defaultAudioLanguage'] = df_video['defaultAudioLanguage'].astype(str)
-    channel_name = r"{}".format(channel_basic_data['channel_name'].replace(':',' : '))
-    
-    day_list = []
-    option_dur = st.selectbox("Content By Duration",
-                                    ("All", 
-                                     "Short",
-                                     "Long"),index=0)
-    
-    #df_per_dur = df_video.copy()
-    if option_dur == 'Short':
-        df_filter = df_video.loc[df_video["duration(s)"]<=60].copy()
-    elif option_dur == 'Long':
-        df_filter = df_video.loc[df_video["duration(s)"]>60].copy()
-    else:
-        df_filter = df_video.copy()
-    df_filter.sort_values(by='hour', ascending=True,inplace=True)
-    list_day_filter = df_filter['day'].unique().tolist()
-    #list_day_filter = list_day_filter.tolist()
-    list_day_filter = list_day_filter + ['All']
-    
-   
-    option_day = st.selectbox("Content By Day",
-                                    list_day_filter,index=len(list_day_filter)-1)
-    
-    if option_day:
-        if option_day == 'All':
-            df_sort_day = df_filter.copy()
-        else:
-            df_sort_day = df_filter.loc[df_filter['day']==option_day]
-    else:
-        df_sort_day = df_filter.copy()
+    st.subheader("Metric")
     option_metric = st.selectbox("Metric Type",
                                     ("Likes", 
                                      "Views",
                                      "Favorite",
                                      "Comment"),index=1)
+    
+    #---------------------------
+    channel_basic_data = scraper_obj.scrape_channel_basic_data(channel_id)
+    list_video_id = scraper_obj.scrape_playlist_item(channel_basic_data['all_video_upload_playlist_id'])
+    df_video = construct_obj.construct_df(scraper_obj.scrape_video_data(list_video_id))
+    df_video['defaultAudioLanguage'] = df_video['defaultAudioLanguage'].astype(str)
+    # Assuming df_video is already defined
+    df_video['start_time(UTC)'] = pd.to_datetime(df_video['start_time(UTC)'])
+
+    df_video['video_lenght'] = df_video['duration(s)'].apply(lambda x: 'Short' if x<=60 else 'Long')
+    channel_name = r"{}".format(channel_basic_data['channel_name'].replace(':',' : '))
+    
+
+    st.subheader("Filter")
+    
+    #df_filter.sort_values(by='hour', ascending=True,inplace=True)
+    #list_day_filter = df_filter['day'].unique().tolist()
+    
     metrics= {"Likes":'like_count',
                           "Views":'view_count',
                           "Favorite":'favorite_count',
                           "Comment":'comment_count'}
+    
+    start_date, end_date = st.date_input(
+        label='Date Range',min_value=df_video['start_time(UTC)'].min(),
+        max_value=df_video['start_time(UTC)'].max(),
+        value=[
+            df_video['start_time(UTC)'].min(), 
+            df_video['start_time(UTC)'].max()
+            ]
+    )
+    df_video = df_video.loc[(df_video['start_time(UTC)'] <= str(end_date)) & (df_video['start_time(UTC)'] >= str(start_date))] 
+   
    
 
 col1, col2 = st.columns([1, 7])
@@ -127,147 +128,187 @@ with col4:
 with col5:
     st.metric(label='Date Created',value=channel_basic_data['date_created(UTC)'].strftime('%Y-%m-%d'))
 
-
-metrics= {"Likes":'like_count',
-                      "Views":'view_count',
-                      "Favorite":'favorite_count',
-                      "Comment":'comment_count'}
-st.header('Performance',divider='rainbow')
-
-with st.container(border=None):     
-    fig, ax = plt.subplots()
-    plot = sns.lineplot(data=df_sort_day,x='start_time(UTC)',
-                        y=metrics.get(option_metric),
-                        ax=ax)
-    ax.set(xlabel='Date', 
-           ylabel=option_metric, 
-           title=f'Performance Over Time By Content Type And Metric {option_metric}')
-    ax.grid(True)
-    ax.tick_params(axis='x', which='both', labelrotation=45)
-
-    st.pyplot(fig,use_container_width=True)
+col1, col2 = st.columns(2)
+df_performance = df_video.copy()
+with col1:
+    st.header('Performance',divider='rainbow')
+    subcol1,subcol2,subcol3 = st.columns(3)
+    with subcol1:
+        date_trunc_permformance = st.selectbox("Performance Date Truncate",("None",
+                                                                            "Weekly",
+                                                                            "Monthly"),
+                                               index=0)
         
+        hue_perform_menu = {'None':["None","Day name","Main category",
+                                    "Language","Duration",'Licence','For kids'],
+                            'Day':["None","Main category","Language",
+                                   "Duration",'Licence','For kids'],
+                            'Language':["None","Day name","Main category",
+                                        "Duration",'Licence','For kids'],
+                            'Duration':["None","Day name","Main category",
+                                        "Language",'Licence','For kids'],
+                            'Licence':["None","Day name","Main category",
+                                       "Language","Duration",'For kids'],
+                            'For kids':["None","Day name","Main category",
+                                        "Language","Duration",'Licence'],
+                            'Main category':["None","Day name","Language",
+                                             "Duration",'Licence','For kids']}
+        perform_filter_dict = {
+                'Day':'day','Language':'defaultAudioLanguage',
+                'Duration':'video_lenght','Licence':'licensed_content',
+                'For kids':'for_kids','Main category':'parent_topic_primary'
+                }
+       
+        
+    with subcol2:
+        perform_filter = st.selectbox("Performance Filter",
+                                      ("None","Day","Language",
+                                       "Duration",'Licence','For kids','Main category'),
+                                      index=0)
+        if perform_filter != 'None':
+            perform_filter_menu = df_video[perform_filter_dict.get(perform_filter)].unique().tolist()
+            perform_filter_input = st.selectbox("Performance filter by",
+                                                (perform_filter_menu),
+                                                index=0)
+            df_performance = df_performance.loc[df_performance[perform_filter_dict.get(perform_filter)] == perform_filter_input]
+        
+        
+    
+    with subcol3:
+        hue_permformance = st.selectbox("Performance Hue",
+                                        (hue_perform_menu.get(perform_filter)),
+                                        index=0
+                                        )
+        
+    
+    
+    if date_trunc_permformance != 'None':
+        if date_trunc_permformance == 'Weekly':
+            df_performance['date_trunc'] = df_performance['start_time(UTC)'].apply(get_start_of_week)
+            #get_start_of_week
             
-st.header('Language',divider='rainbow')
-
-with st.container(border=None):
-    if not df_video['defaultAudioLanguage'].empty:
-        fig, ax = plt.subplots(figsize=(10,3))
-        sns.boxplot(data=df_sort_day,
-                    x=metrics.get(option_metric),
-                    y='defaultAudioLanguage',showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_metric, 
-               ylabel='Language', 
-               title='Performance By Language')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
+        elif date_trunc_permformance == 'Monthly':
+            df_performance['date_trunc'] = df_performance['start_time(UTC)'].apply(lambda x: x.strftime('%Y-%m'))
     else:
-        st.write("Language Data Empty")
-        
-st.header('Days',divider='rainbow')
-
-with st.container(border=None):
-    if not df_video['day'].empty:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_filter,
-                    x=metrics.get(option_metric),
-                    y='day',showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_day, 
-               ylabel='Day', 
-               title='Performance By Days')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("Day Data Empty")
-        
-st.header('Hour',divider='rainbow')
-with st.container(border=None):
-    if not df_video['hour'].empty: 
-        fig, ax = plt.subplots()
-        sns.lineplot(
-            data=df_sort_day, x="hour", y=metrics.get(option_metric),ax=ax)
-            
-        ax.set(xlabel='Hour', 
-               ylabel=option_metric, 
-               title='Performance By Hour (UTC)')
-        ax.grid(True)
-        
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("Hour Data Empty")
-st.header('Topic Category',divider='rainbow')
-with st.container(border=None):
-    if not df_video['parent_topic_primary'].empty and not df_video['parent_topic'].empty:
-        option_category_type = st.selectbox("Category Type",
-                                            ("Primary Category", 
-                                             "Sub-Category",
-                                             ),index=1)
-        topic_dict = {"Primary Category":'parent_topic_primary',
-                      "Sub-Category":'parent_topic'}
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_sort_day,
-                    x=metrics.get(option_metric),
-                    y=topic_dict.get(option_category_type),
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_metric, 
-               ylabel='Category', 
-               title='Performance By Category')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("Category Data Empty")
-        
-st.header('Duration',divider='rainbow')
-with st.container(border=None):
-    if not df_video['duration(s)'].empty: 
-        fig, ax = plt.subplots()
-        sns.regplot(data=df_sort_day, x="duration(s)", y=metrics.get(option_metric),
-                    ax=ax,logx=True)
-        ax.set(xlabel='Duration In Seconds', 
-               ylabel=option_metric, 
-               title=f'Relation Between {option_metric} And Duration')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("Duration Data Empty")
-        
-st.header('Licensed Content',divider='rainbow')
-with st.container(border=None):
-    if not df_video['licensed_content'].empty: 
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_sort_day,
-                    x=metrics.get(option_metric),
-                    y='licensed_content',
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_metric, 
-               ylabel='Licensed Content', 
-               title='Performance By Licensed Content')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("Licensed Data Empty")
-        
-st.header('For Kids',divider='rainbow')
-with st.container(border=None):
-    if not df_video['for_kids'].empty:
-        fig, ax = plt.subplots()
-        sns.boxplot(data=df_sort_day,
-                    x=metrics.get(option_metric),
-                    y='for_kids',
-                    showmeans=True,
-                    ax=ax)
-        ax.set(xlabel=option_metric, 
-               ylabel='For Kids', 
-               title='Performance By For Kids')
-        ax.grid(True)
-        st.pyplot(fig,use_container_width=True)
-    else:
-        st.write("For Kids Data Empty")
-
-        
+        df_performance['date_trunc'] = df_performance['start_time(UTC)']
+    df_performance.sort_values(by='date_trunc',ascending=True,inplace=True)
+    
+    
+    
    
+        
+    
+    fig,ax = plt.subplots(figsize=(7,4))
+    sns.lineplot(data=df_performance,
+                 y=metrics.get(option_metric),
+                 x='date_trunc',
+                 hue=perform_filter_dict.get(hue_permformance),
+                 ax=ax
+                 )
+    
+    ax.set_title(f"Performance (by date) with hue {hue_permformance}")
+    ax.set_xlabel("Date")
+    ax.set_ylabel(f"{option_metric} Count")
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(True)
+    st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
+        
+with col2:
+    st.header('Hour',divider='rainbow')
+    df_hour = df_video.copy()
+    df_hour.sort_values(by='hour',ascending=True,inplace=True)
+    subcol1,subcol2= st.columns(2)
+    with subcol1:
+        hour_filter = st.selectbox(
+            "Hour Filter",
+            ("None","Day",
+             "Language","Duration",'Licence',
+             'For kids',
+             'Main category'
+             ),
+            index=0)
+        hour_filter_dict = {
+            'Day':'day','Language':'defaultAudioLanguage',
+            'Duration':'video_lenght','Licence':'licensed_content',
+            'For kids':'for_kids','Main category':'parent_topic_primary'
+            }
+        if hour_filter != 'None':
+            col_hour = hour_filter_dict.get(hour_filter)
+            list_val_filter = df_hour[col_hour].unique().tolist()
+            hour_filter_box = st.selectbox("Hour filter value",list_val_filter,index=0)
+        hue_hour_menu = {'None':["None","Day name","Main category",
+                                 "Language","Duration",'Licence','For kids'],
+                         'Day':["None","Main category","Language",
+                                "Duration",'Licence','For kids'],
+                         'Language':["None","Day name","Main category",
+                                     "Duration",'Licence','For kids'],
+                         'Duration':["None","Day name","Main category",
+                                     "Language",'Licence','For kids'],
+                         'Licence':["None","Day name","Main category",
+                                    "Language","Duration",'For kids'],
+                         'For kids':["None","Day name","Main category",
+                                     "Language","Duration",'Licence'],
+                         'Main category':["None","Day name","Language",
+                                          "Duration",'Licence','For kids']}
+            
+    with subcol2:
+        hue_hour = st.selectbox("Hour Hue",
+                                (hue_hour_menu.get(hour_filter)),
+                                index=0)
+        hour_dict = {'Day name':'day','Main category':'parent_topic_primary',
+                     'Language':'defaultAudioLanguage','Duration':'video_lenght',
+                     'None':None,'Licence':'licensed_content',
+                     'For kids':'for_kids','Main category':'parent_topic_primary'}
+        if hour_filter != 'None':
+            df_hour = df_hour.loc[df_hour[col_hour]==hour_filter_box]
+    
+    fig,ax = plt.subplots(figsize=(7,4))
+    sns.lineplot(data=df_hour,
+                 y=metrics.get(option_metric),
+                 x='hour',
+                 hue=hour_dict.get(hue_hour),
+                 ax=ax)
+    ax.set_title(f"Hour with hue {hue_permformance}")
+    ax.set_xlabel("Hour")
+    ax.set_ylabel(f"{option_metric} Count")
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(True)
+    st.pyplot(fig=fig, clear_figure=None, use_container_width=True)
+
+with st.container(height=None, border=None):
+    df_cat = df_video.copy()
+    st.header("Category",divider='rainbow')
+    col1, col2 = st.columns([1,5])
+    with col1:
+        
+        
+        cat_plot_type = st.selectbox("Category type",
+                                ('Main category','Sub category'),
+                                index=0)
+        cat_plot_type_dict = {'Main category':'parent_topic_primary',
+                              'Sub category':'parent_topic'}
+    
+        cat_plot_hue = st.selectbox(
+            "Category hue",
+            ('None','Day','Duration','Language','Licence','For kids'),
+            index=0)
+        cat_plot_hue_dict = {'None':None,
+                             'Day':'day',
+                             'Duration':'video_lenght',
+                             'Language':'defaultAudioLanguage',
+                             'Licence':'licensed_content',
+                             'For kids':'for_kids'}
+    with col2:
+        fig,ax = plt.subplots()
+        sns.boxplot(data=df_cat,
+                     y=cat_plot_type_dict.get(cat_plot_type),
+                     x=metrics.get(option_metric),
+                     hue=cat_plot_hue_dict.get(cat_plot_hue),
+                     ax=ax,
+                     showmeans=True )
+        ax.set_xlabel(f"{option_metric} Count")
+        ax.set_ylabel(cat_plot_type)
+        plt.grid(True)
+        st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
+  
        

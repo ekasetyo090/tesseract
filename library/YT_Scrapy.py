@@ -738,13 +738,13 @@ class YtScraper:
                 return response
         except HTTPError:
             if response.status_code == 403:
-                time.sleep(10)
+                time.sleep(20)
                 return self.make_request(url=url, params=params,api=api)
             else:
                 raise  # Re-raise error jika bukan 403
 
         except (ConnectionError, req.exceptions.RequestException):
-            time.sleep(10)
+            time.sleep(20)
             return self.make_request(url=url, params=params,api=api)
         
                 
