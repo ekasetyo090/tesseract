@@ -16,6 +16,8 @@ from data_construct import data_constuct
 from datetime import timedelta
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
 import seaborn as sns
 import pandas as pd
 sns.set_theme(style="ticks", palette="deep")
@@ -71,8 +73,8 @@ with st.sidebar:
 
     df_video['video_lenght'] = df_video['duration(s)'].apply(lambda x: 'Short' if x<=60 else 'Long')
     channel_name = r"{}".format(channel_basic_data['channel_name'].replace(':',' : '))
+    #df_video['is_live'] = df_video['']
     
-
     st.subheader("Filter")
     
     #df_filter.sort_values(by='hour', ascending=True,inplace=True)
@@ -210,6 +212,9 @@ with col1:
     ax.set_xlabel("Date")
     ax.set_ylabel(f"{option_metric} Count")
     plt.xticks(rotation=45, ha='right')
+    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+    plt.gcf().autofmt_xdate()
+    plt.tight_layout()
     plt.grid(True)
     st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
         
@@ -310,5 +315,6 @@ with st.container(height=None, border=None):
         ax.set_ylabel(cat_plot_type)
         plt.grid(True)
         st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
+#st.dataframe(df_video)
   
        

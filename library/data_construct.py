@@ -120,7 +120,8 @@ class data_constuct:
     def construct_df(self,df):
         df['parent_topic'] = df['topic_category'].apply(lambda x: self.parent_topic(x) if x is not None else None)
         df['parent_topic_primary'] = df['categoryId'].apply(lambda x: self.parent_topic_id(x) if x is not None else None)
-        df['start_time(UTC)'].fillna(df['published_date'], inplace=True)
+        df['is_live'] = df['start_time(UTC)'].apply(lambda x: 'Live' if x is not None else 'Not Live')
+        #df['start_time(UTC)'].fillna(df['published_date'], inplace=True)
         df['day'] = df['start_time(UTC)'].dt.strftime('%A')
         df['hour'] = df['start_time(UTC)'].dt.strftime('%H')
         df['licensed_content'] = df['licensed_content'].astype(str)
