@@ -433,22 +433,48 @@ class YtScraper:
               The total number of seconds represented by the duration string. 
               Returns 0 if the string is not a valid ISO 8601 duration format.
           """
-        
-        # Regex to extract hours, minutes, and seconds from the ISO 8601 duration
         if not duration:
             return 0
-        pattern = re.compile(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?')
+        # Regex to extract hours, minutes, and seconds from the ISO 8601 duration
+        pattern = re.compile(
+            r'P'  # starts with 'P'
+            r'(?:(?P<years>\d+)Y)?'  # years
+            r'(?:(?P<months>\d+)M)?'  # months
+            r'(?:(?P<weeks>\d+)W)?'  # weeks
+            r'(?:(?P<days>\d+)D)?'  # days
+            r'(?:T'  # time part starts with 'T'
+            r'(?:(?P<hours>\d+)H)?'  # hours
+            r'(?:(?P<minutes>\d+)M)?'  # minutes
+            r'(?:(?P<seconds>\d+)S)?'  # seconds
+            r')?'  # end of the time part
+        )
+    
+        # Match the pattern with the input duration string
         match = pattern.match(duration)
-
         if not match:
             return 0
-
-        hours = int(match.group(1)) if match.group(1) else 0
-        minutes = int(match.group(2)) if match.group(2) else 0
-        seconds = int(match.group(3)) if match.group(3) else 0
-
-        # Convert the duration to seconds
-        total_seconds = hours * 3600 + minutes * 60 + seconds
+    
+        # Extract the matched groups as integers (default to 0 if not present)
+        duration = match.groupdict()
+        years = int(duration['years']) if duration['years'] else 0
+        months = int(duration['months']) if duration['months'] else 0
+        weeks = int(duration['weeks']) if duration['weeks'] else 0
+        days = int(duration['days']) if duration['days'] else 0
+        hours = int(duration['hours']) if duration['hours'] else 0
+        minutes = int(duration['minutes']) if duration['minutes'] else 0
+        seconds = int(duration['seconds']) if duration['seconds'] else 0
+    
+        # Convert everything to seconds
+        total_seconds = (
+            years * 365 * 24 * 60 * 60 +
+            months * 30 * 24 * 60 * 60 +
+            weeks * 7 * 24 * 60 * 60 +
+            days * 24 * 60 * 60 +
+            hours * 60 * 60 +
+            minutes * 60 +
+            seconds
+        )
+    
         return total_seconds
     
     def convert_to_datetime(self,iso_string):

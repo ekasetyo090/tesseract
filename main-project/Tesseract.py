@@ -17,6 +17,7 @@ from datetime import timedelta
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.dates import MO
 
 import seaborn as sns
 import pandas as pd
@@ -187,14 +188,18 @@ with col1:
     if date_trunc_permformance != 'None':
         if date_trunc_permformance == 'Weekly':
             df_performance['date_trunc'] = df_performance['start_time(UTC)'].apply(get_start_of_week)
-            #get_start_of_week
+            #loc = mdates.WeekdayLocator(byweekday=MO, interval=1, tz=None)
+            #locator.intervald[HOURLY] = [3]
             
         elif date_trunc_permformance == 'Monthly':
             df_performance['date_trunc'] = df_performance['start_time(UTC)'].apply(lambda x: x.strftime('%Y-%m'))
+            #loc = mdates.AutoDateLocator()
     else:
         df_performance['date_trunc'] = df_performance['start_time(UTC)']
+        #loc = mdates.AutoDateLocator()
+        #loc.intervald['DAILY'] = [1]  # only show every 3 hours
     df_performance.sort_values(by='date_trunc',ascending=True,inplace=True)
-    
+    #st.dataframe(df_performance)
     
     
    
@@ -315,6 +320,6 @@ with st.container(height=None, border=None):
         ax.set_ylabel(cat_plot_type)
         plt.grid(True)
         st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
-#st.dataframe(df_video)
+st.dataframe(df_performance)
   
        
