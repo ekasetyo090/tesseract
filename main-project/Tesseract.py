@@ -320,6 +320,6 @@ with st.container(height=None, border=None):
         ax.set_ylabel(cat_plot_type)
         plt.grid(True)
         st.pyplot(fig=fig, clear_figure=None, use_container_width=True, )
-st.dataframe(df_performance)
+#st.dataframe(df_performance)
   
        
