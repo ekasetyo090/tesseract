@@ -279,7 +279,7 @@ with col2:
                  hue=hour_dict.get(hue_hour),
                  ax=ax)
     ax.set_title(f"Hour with hue {hue_permformance}")
-    ax.set_xlabel("Hour")
+    ax.set_xlabel("Hour (UTC)")
     ax.set_ylabel(f"{option_metric} Count")
     plt.xticks(rotation=45, ha='right')
     plt.grid(True)
