@@ -12,8 +12,9 @@ import time
 import urllib.parse
 import re
 
-
+import pytz
 from datetime import datetime
+import dateutil.parser
 from typing import Union
 from requests.exceptions import ConnectionError, HTTPError
 from bs4 import BeautifulSoup
@@ -165,18 +166,15 @@ class YtScraper:
         }
         self.session_api.get('https://developers.google.com/youtube/v3/docs')
         response = self.session_api.get('https://explorer.apis.google.com/embedded.js')
-        api_pattern = re.compile(r'var JF=function\(a\){this.security={.*?};\s*this\.g=a;.*?this\.j=\{[\s\S]*?\}\};')
-        match = api_pattern.search(response.text)
-        api_pattern = re.compile(r'api_key:\s*\{Jc:\s*"(.*?)"\}')
-        match = api_pattern.search(match.group())
+        pattern = r'this\.Ic\s*=\s*"([\w\-\_\n]*)"'
+        match = re.search(pattern, response.text)
         api_key = match.group(1)
         #------------
         self.session_api.headers["Referer"] = 'https://developers.google.com/'
         response = self.session_api.get('https://apis.google.com/js/api.js')
-        reff_pattern = re.compile(r'window\.gapi\.load\("",\s*\{([\s\S]*?)\}\);')
-        match = reff_pattern.search(response.text)
-        reff_pattern = re.compile(r'h:\s*"(m;/_/scs/abc-static/_/js/k=gapi\.lb\.en\.[^"]*)"')
-        reff = urllib.parse.quote(reff_pattern.search(match.group(1)).group(1), safe='')
+        pattern = r'h:"(m;/_/scs/abc-static/_/js/k=gapi\.lb\.en\.[^"]*)"'
+        match = re.search(pattern, response.text)
+        reff = urllib.parse.quote(match.group(1), safe='')
         
         return api_key, reff
         
@@ -497,30 +495,36 @@ class YtScraper:
     
     def validate_date(self,date_str: str) -> str:
         """
-        Validates the given date string to ensure it is in the correct format.
-
+        Validates the given date string and converts it to ISO format.
+    
         Args:
             date_str (str): The date string to be validated.
-
+    
         Returns:
-            bool: True if the date is valid, False otherwise.
-
+            str: The date in ISO format (yyyy-mm-ddTHH:MM:SSZ).
+    
         Raises:
             ValueError: If the date format is invalid.
         """
+    
         try:
+            # Attempt to parse the date string using strptime for yyyy-mm-dd format
             date_object = datetime.strptime(date_str, "%Y-%m-%d")
-            return date_object.isoformat(timespec="seconds") + "Z"
         except ValueError:
-            raise ValueError("Format date invalid. use format yyyy-mm-dd.")
-        except TypeError:
-            raise TypeError("Format date invalid. use format yyyy-mm-dd in string not integer.")
+            try:
+                # Attempt to parse the date string using dateutil.parser for more complex formats
+                date_object = dateutil.parser.parse(date_str)
+            except ValueError:
+                raise ValueError("Invalid date format. Use yyyy-mm-dd or ISO 8601 format.")
+        date_object = date_object.replace(tzinfo=pytz.utc)
+        return date_object.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     
     def scrape_search_video(self,
                             q:str=None,
                             regionCode:str=None,
                             publishedAfter:str=None,
                             publishedBefore:str=None,
+                            duration:str='videoDurationUnspecified',
                             max_data:int=100,
                             event_type:str='completed',
                             topic_id: Union[list, str]=None,
@@ -554,11 +558,14 @@ class YtScraper:
         regionCode (str): The YouTube region code (e.g., US, GB).
         publishedAfter (str, optional): The ISO 8601 formatted date after which to search (inclusive).
         publishedBefore (str, optional): The ISO 8601 formatted date before which to search (exclusive).
+        duration (str,optional) : 'any','short','medium','long', and 'videoDurationUnspecified' 
         max_data (int, optional): The maximum number of video results to scrape (default: 100, maximum: 10,000).
         event_type (str, optional): The event type to search for ("completed", "live", or "upcoming"). Defaults to "completed".
         all_data (bool, optional): If True, retrieves all search results (up to 500). Defaults to False.
         topic_id (Union[list, str]): A list of topic IDs or a single topic ID.
         """
+        if duration not in ['videoDurationUnspecified','any','short','medium','long']:
+            raise ValueError('invalid duration argumen')
         if not topic_id and not q and not regionCode and not publishedAfter and not publishedBefore:
             raise ValueError(f'invalid args, all args (q,topic_id,regionCode,publishedAfter,publishedBefore) is empty. at least 1 arg is not empty : {raise_mesage}')
         topic_id = self.validate_topic(topic_id)
@@ -578,6 +585,7 @@ class YtScraper:
             'publishedAfter': publishedAfter,
             'maxResults': '50',
             'regionCode': regionCode,
+            'videoDuration': duration,
             'order': 'relevance',
             'type': 'video',
             'part': 'snippet',
@@ -652,6 +660,7 @@ class YtScraper:
                 'maxResults': '50',
                 'regionCode': regionCode,
                 'pageToken' : next_page,
+                'videoDuration': duration,
                 'order': 'relevance',
                 'type': 'video',
                 'part': 'snippet',
